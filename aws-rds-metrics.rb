@@ -118,13 +118,13 @@ class AwsRDSMetrics < Sensu::Plugin::Metric::CLI::Graphite
       # define all options
       options = {
         'namespace' => 'AWS/RDS',
-        'metric_name' => config[:metric],
+        'metric_name' => '',
         'dimensions' => [
           { 'name' => 'DBInstanceIdentifier', 'value' => config[:dbinstanceidentifier] }
         ],
         'start_time' => start_time.iso8601,
         'end_time' => end_time.iso8601,
-        'period' => 60,
+        'period' => 120,
         'statistics' => [stat_type[config[:statistics_type].downcase]]
       }
 
@@ -132,8 +132,10 @@ class AwsRDSMetrics < Sensu::Plugin::Metric::CLI::Graphite
 
       # Fetch all metrics by elasticachetype (redis or memcached).
       metrics.each do |m|
-        options['metric_name'] = m[0] # override metric
+        # override target metric 'metric_name'
+        options['metric_name'] = m[0]
         resp = cloud_watch.get_metric_statistics(options)
+        # add response to result
         result[m[0]] = resp[:datapoints][0] unless resp[:datapoints][0].nil?
       end
 
